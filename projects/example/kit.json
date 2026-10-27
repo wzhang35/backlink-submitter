@@ -1,0 +1,14 @@
+{
+  "id": "example",
+  "name": "Example Product",
+  "website": "https://product.example/",
+  "submissionKitUrl": "https://docs.example/submission-kit",
+  "base": {
+    "wikiUrl": "https://feishu.example/base/example?table=tbl-example&view=vew-example",
+    "baseToken": "example-base-token",
+    "tableId": "tbl-example",
+    "viewId": "vew-example"
+  },
+  "profile": "example-profile",
+  "defaultSubmitter": "example-owner"
+}

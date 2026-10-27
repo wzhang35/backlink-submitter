@@ -1,0 +1,14 @@
+{
+  "name": "backlinks",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test .agents/skills/backlink-submitter/scripts/*.test.mjs scripts/*.test.mjs",
+    "check:public": "node scripts/public-release.mjs check",
+    "export:public": "node scripts/public-release.mjs export"
+  }
+}

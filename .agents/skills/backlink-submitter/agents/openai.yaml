@@ -1,0 +1,4 @@
+interface:
+  display_name: "Backlink Lifecycle"
+  short_description: "按产品 Submission Kit 筛选、提交并验证公开外链"
+  default_prompt: "Use $backlink-submitter to process candidates or audit backlinks for the selected project."

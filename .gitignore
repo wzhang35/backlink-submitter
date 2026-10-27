@@ -1,0 +1,16 @@
+tmp/
+output/
+dist/
+coverage/
+*.log
+/projects/*
+!/projects/example/
+/projects/example/*
+!/projects/example/kit.json
+.DS_Store
+node_modules/
+.env
+.env.*
+!.env.example
+
+.local/
