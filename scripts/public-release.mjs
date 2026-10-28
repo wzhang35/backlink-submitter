@@ -5,6 +5,33 @@ import { resolve, join, relative, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+export const PUBLIC_REPOSITORY_URL = 'https://github.com/wzhang35/backlink-submitter';
+const repositoryWrappers = new Map([['"','"'], ["'","'"], ['`','`'], ['(',')'], ['[',']'], ['{','}'], ['<','>'], ['（','）'], ['【','】']]);
+
+function withoutPublicRepositoryReferences(content) {
+  return content.replaceAll(PUBLIC_REPOSITORY_URL, (url, offset) => {
+    const linePrefix = content.slice(content.lastIndexOf('\n', offset - 1) + 1, offset)
+      .replaceAll(PUBLIC_REPOSITORY_URL, '');
+    // Keep URI-valued text conservative, including whitespace inside opaque URIs.
+    if (/\b[a-z][a-z\d+.-]*:|[/\\]{2}[^\s/\\]/i.test(linePrefix)) return url;
+    let start = offset;
+    while (start > 0 && !/\s/.test(content[start - 1])) start--;
+    const prefix = content.slice(start, offset), opener = prefix.at(-1);
+    // A reference nested in another URL or path is not the public repository.
+    if (/[:/\\?#%@]/.test(prefix)) return url;
+    const closer = repositoryWrappers.get(opener);
+    if (prefix && !closer && opener !== '：') return url;
+    let suffix = content.slice(offset + url.length);
+    if (closer) {
+      if (!suffix.startsWith(closer)) return url;
+      suffix = suffix.slice(1);
+    }
+    const sentenceEnd = /^(?:$|\s|[.,;!?。，；！？、](?=$|\s))/.test(suffix);
+    // Chinese prose may directly follow a closed reference: （URL），请查看。
+    const proseAfterWrapper = closer && /^[，。；！？、][^\s/\\?#%@]*?(?:\s|$)/.test(suffix);
+    return sentenceEnd || proseAfterWrapper ? '' : url;
+  });
+}
 function git(args, cwd = root) {
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^GIT_(?:DIR|WORK_TREE|INDEX_FILE|COMMON_DIR|OBJECT_DIRECTORY|ALTERNATE_OBJECT_DIRECTORIES|TEMPLATE_DIR|CONFIG.*)$/.test(key)));
   Object.assign(env,{GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:process.platform === 'win32' ? 'NUL' : '/dev/null'});
@@ -31,7 +58,8 @@ export function contentFindings(content, signals = []) {
   if (/(?:gh[pousr]_[a-zA-Z0-9]{20,}|github_pat_[a-zA-Z0-9_]{20,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)/.test(content)) result.push('credential-like content');
   const emails = content.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
   if (emails.some(email => !/@(?:[^@]*\.)?(?:example|invalid|test)$|@example\.(?:com|org|net)$|@localhost$/i.test(email))) result.push('nonfictional email');
-  const lower = content.toLowerCase();
+  // The exact public repository URL is safe; project identity elsewhere is not.
+  const lower = withoutPublicRepositoryReferences(content).toLowerCase();
   if (signals.some(signal => lower.includes(signal.toLowerCase()))) result.push('local project identity');
   return result;
 }

@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 390" role="img" aria-labelledby="workflow-title workflow-desc">
+  <title id="workflow-title">外链提交与核验队列</title>
+  <desc id="workflow-desc">候选来源包括 Ahrefs、Semrush 和自有清单。提交队列包含待提交，核验队列包含待核验和未找到记录，核验成功包含 dofollow、nofollow、nolink。受阻人工处理队列汇总邮箱验证、验证码、需换链或付费；处理后可返回提交队列或进入终止，表格仍按实际情况记录具体状态。提交队列也可直接进入终止。终止包含网站失效和不适合提交。蓝色表示 AI 流程，橙色表示人工处理。</desc>
+  <defs>
+    <marker id="arrow-blue" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+      <path d="M0 0 7 3.5 0 7" fill="none" stroke="#93c5fd" stroke-width="1.2"/>
+    </marker>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; text-anchor: middle; }
+      .label { font-size: 17px; font-weight: 600; }
+      .detail { font-size: 14px; }
+      .normal { fill: #1e40af; }
+      .paused { fill: #475569; }
+      .manual { fill: #9a3412; }
+      .legend { font-size: 13px; fill: #64748b; text-anchor: start; }
+      .source-detail { font-size: 12px; fill: #475569; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="998" height="388" rx="20" fill="#fff" stroke="#e2e8f0"/>
+
+  <!-- Main flow -->
+  <g fill="none" stroke="#93c5fd" stroke-width="1.5" marker-end="url(#arrow-blue)">
+    <path d="M198 89 H246"/>
+    <path d="M414 89 H470"/>
+    <path d="M692 89 H748"/>
+  </g>
+
+  <rect x="24" y="28" width="174" height="122" rx="18" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4 4"/>
+  <text x="111" y="58" class="label paused">候选来源</text>
+  <rect x="40" y="71" width="142" height="20" rx="10" fill="#fff" stroke="#e2e8f0"/>
+  <text x="111" y="85" class="source-detail">Ahrefs</text>
+  <rect x="40" y="96" width="142" height="20" rx="10" fill="#fff" stroke="#e2e8f0"/>
+  <text x="111" y="110" class="source-detail">Semrush</text>
+  <rect x="40" y="121" width="142" height="20" rx="10" fill="#fff" stroke="#e2e8f0"/>
+  <text x="111" y="135" class="source-detail">自有清单</text>
+
+  <rect x="246" y="28" width="168" height="122" rx="18" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="330" y="58" class="label normal">提交队列</text>
+  <rect x="271" y="84" width="118" height="30" rx="15" fill="#fff" stroke="#dbeafe"/>
+  <text x="330" y="104" class="detail normal">待提交</text>
+
+  <rect x="470" y="28" width="222" height="122" rx="18" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="581" y="58" class="label normal">核验队列</text>
+  <rect x="492" y="78" width="178" height="26" rx="13" fill="#fff" stroke="#dbeafe"/>
+  <text x="581" y="96" class="detail normal">待核验</text>
+  <rect x="492" y="112" width="178" height="26" rx="13" fill="#fff" stroke="#dbeafe"/>
+  <text x="581" y="130" class="detail normal">未找到记录</text>
+
+  <rect x="748" y="28" width="228" height="122" rx="18" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="862" y="58" class="label normal">核验成功</text>
+  <rect x="766" y="78" width="92" height="26" rx="13" fill="#fff" stroke="#dbeafe"/>
+  <text x="812" y="96" class="detail normal">dofollow</text>
+  <rect x="866" y="78" width="92" height="26" rx="13" fill="#fff" stroke="#dbeafe"/>
+  <text x="912" y="96" class="detail normal">nofollow</text>
+  <rect x="816" y="112" width="92" height="26" rx="13" fill="#fff" stroke="#dbeafe"/>
+  <text x="862" y="130" class="detail normal">nolink</text>
+
+  <!-- Other outcomes -->
+  <g fill="none" stroke="#93c5fd" stroke-width="1.4" marker-end="url(#arrow-blue)">
+    <path d="M330 150 V185 H788 V220"/>
+    <path d="M413 185 V220"/>
+    <path d="M305 220 V151"/>
+    <path d="M541 281 H670"/>
+  </g>
+
+  <g transform="translate(558 -5)">
+  <rect x="112" y="225" width="236" height="122" rx="16" fill="#eff6ff" stroke="#93c5fd"/>
+  <text x="230" y="252" class="label normal">终止</text>
+  <rect x="122" y="282" width="102" height="30" rx="15" fill="#fff" stroke="#dbeafe"/>
+  <text x="173" y="302" class="detail normal">网站失效</text>
+  <rect x="232" y="282" width="106" height="30" rx="15" fill="#fff" stroke="#dbeafe"/>
+  <text x="285" y="302" class="detail normal">不适合提交</text>
+  </g>
+
+  <g transform="translate(-387 -5)">
+  <rect x="672" y="225" width="256" height="122" rx="16" fill="#fff7ed" stroke="#fdba74" stroke-width="1.5"/>
+  <text x="800" y="252" class="label manual">受阻：人工处理</text>
+  <rect x="685" y="269" width="117" height="26" rx="13" fill="#fff" stroke="#ffedd5"/>
+  <text x="743.5" y="287" class="detail manual">邮箱验证</text>
+  <rect x="810" y="269" width="105" height="26" rx="13" fill="#fff" stroke="#ffedd5"/>
+  <text x="862.5" y="287" class="detail manual">验证码</text>
+  <rect x="741.5" y="305" width="117" height="26" rx="13" fill="#fff" stroke="#ffedd5"/>
+  <text x="800" y="323" class="detail manual">需换链 / 付费</text>
+  </g>
+
+  <!-- Legend -->
+  <circle cx="372" cy="365" r="4" fill="#3b82f6"/>
+  <text x="384" y="370" class="legend">AI 流程</text>
+  <circle cx="532" cy="365" r="4" fill="#f97316"/>
+  <text x="544" y="370" class="legend">人工处理</text>
+</svg>

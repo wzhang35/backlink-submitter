@@ -1,58 +1,41 @@
-# Backlink Lifecycle
+# Backlink Submitter
 
-按每个产品的 Submission Kit 筛选免费渠道、辅助逐站提交，并核验公开资料中的真实官网链接。面向能够读取本地文件、使用用户 Chrome 和运行 CLI 的 AI 助手；不是无人值守的批量投稿机器人。
+**把外链提交的重复工作交给 AI。**
 
-## 环境
+提供产品资料和候选网站，AI 帮你筛选免费渠道、逐站填表提交，再确认链接是否生效。
 
-- Node.js 18+、Git；不需要安装 npm 运行依赖。
-- 已安装并授权的 `lark-cli`，使用用户身份；飞书操作需要当前环境的 `lark-suite` skill。
-- 提交／公开核验需要支持 Chrome 标签页、DOM 读取和人工交接的浏览器工具。只有 CLI 不足以完成公开核验。
+- **少填重复表单**：复用产品介绍、账号和素材，减少重复填写和上传。
+- **进度随时可查**：提交结果、公开页和下一步统一记录在飞书 Base。
+- **需要你时再接手**：遇到登录或验证码，保留页面并告诉你要做什么。
 
-先让助手读取 [backlink-submitter skill](.agents/skills/backlink-submitter/SKILL.md)。只读 review 不授权提交或写回。
+## 从候选，到有效外链
 
-## 项目接入
+![提交队列 → 核验队列 → 核验成功；未找到记录留在核验队列，另有人工处理及终止分支](assets/backlink-workflow.svg)
 
-1. 复制 `projects/example/kit.json` 到被忽略的 `projects/<project-id>/kit.json`，填写该项目的路由。账号、文案和素材维护在在线 Submission Kit，不复制到工具源码。
-2. 按 [Base 标准与接入说明](.agents/skills/backlink-submitter/references/base-setup.md) 创建空表，或对已有表做只读对比。迁移已有业务数据和执行状态必须单独审阅。
-3. 新空表使用 `init` 创建本机持久状态；既有项目迁移机器时恢复原 `.local/backlink-submitter/`，不能重新初始化来绕过未知提交结果。
+## 一张表管理所有外链提交
 
-```sh
-# example 是虚构配置，接入时换成自己的 project-id。
-node scripts/backlinks.mjs example schema
-node scripts/backlinks.mjs example check-schema
-node scripts/backlinks.mjs example init --input-json - <<'JSON'
-{"yes":true}
-JSON
-node scripts/backlinks.mjs example bootstrap
-node scripts/backlinks.mjs example collect
+哪些网站值得投、费用多少、提交后有没有外链，一张表看清。
+以下为虚构示例，流量为估算月访问量（千次），ROI 为筛选参考分，date 为归档日期。
+
+| 网站 | DR | 流&#8288;量&nbsp;(k) | 费用($) | ROI | 状态 | 公开页 | 备注 | date |
+| --- | ---: | ---: | ---: | ---: | --- | --- | --- | --- |
+| 示例 A | 56 | 120 | 0 | 63.3 | 待核验 | — | 已提交，等待审核 | 2026-10-20 |
+| 示例 B | 67 | 350 | 0 | 83.4 | 已验证：dofollow | directory.example/product | 公开页已包含官网链接 | 2026-10-18 |
+| 示例 C | 42 | 28.5 | 0 | 27.2 | 受阻：人工处理 | — | 等你完成验证码后继续 | 2026-10-21 |
+| 示例 D | 52 | 86 | 0 | 54.6 | 已验证：nofollow | listing.example/product | 官网链接已上线，属性为 nofollow | 2026-10-16 |
+| 示例 E | 71 | 480 | 49 | 1.7 | 受阻：需换链/付费 | — | 仅提供 $49 付费入口，未提交、未付款 | 2026-10-22 |
+
+## Getting Started
+
+复制下面的话，发给 AI agent：
+
+```text
+请用这个工具帮我提交、核验和跟进外链：
+https://github.com/wzhang35/backlink-submitter
+
+先阅读仓库中的 AGENTS.md，按指引完成接入并开始处理。缺少资料或需要我配合时，直接告诉我。
 ```
 
-`schema` 只输出字段 JSON；`check-schema` 只读远端字段并列出差异，不创建或修改表；`init` 只接受新空表且不写远端。所有业务处理必须明确选择项目。
+需要支持本地文件、终端和 Chrome 操作的 agent，以及飞书账号。已有产品资料或飞书 Base 可以一并提供。Agent 会按 [接入指南](AGENTS.md) 完成准备。
 
-## 提交与报告
-
-提交时先检查资格、账号、费用和重复记录，按 skill 的检查点推进，只执行一次最终提交；点击后结果不明只能核验，不能重提。登录、邮箱验证和验证码保留现场交给用户。
-
-`collect` 收集待核验记录。`verify` 会进行 HTTP 请求，只提供筛选线索：它不等于 Chrome 公开核验，也不能用其报告直接写 Base。正式写回要求同次 Chrome 观察的实际公开 URL、原始 `href`／`rel` 和人工审阅后的 notes，协议见 [audit-policy](.agents/skills/backlink-submitter/references/audit-policy.md)。
-
-运行报告、截图、候选、原申请、notes 和管理链接都是私有业务资料。报告中的项目／官网／Base 身份用于防止跨项目写回，不应删除这些校验字段来制作可分享报告；公开示例只使用虚构数据。
-
-## 公开发布
-
-```sh
-npm test
-npm run check:public
-npm run export:public -- tmp/public-release
-```
-
-`check:public` 检查当前可提交文件、暂存区和所有本地 refs 可达的历史，拒绝私有产物路径、真实文档/PR/Issue链接、邮箱、明显凭证及本机项目标识；只输出位置和问题类别，不打印命中的资料。它是检查工具，不能证明不存在所有形式的敏感信息；仍需人工审阅 PR、Issue、附件、release 和 Git 托管设置。
-
-历史有敏感资料时，后续删除文件不能清除旧版本。不要直接把旧仓库改成公开，也不要把旧分支、tags、Git bundle、PR 或 Issue 搬入新仓库。
-
-`export:public` 检查当前源码后，复制可提交文件到全新的 `tmp/` 或 `dist/` 子目录，并初始化一个**没有提交、历史或 remote**的 Git 仓库。不会覆盖已有目录，不会复制被忽略文件、原 `.git` 或原仓库的 PR/Issue。导出后在该目录重新运行 `npm test` 和 `npm run check:public`，人工审阅后再创建首个提交并推到新仓库。导出不是发布，也不会改变原远端或仓库可见性。
-
-跨机器继续业务时，私下迁移完整 `.local/backlink-submitter/` 和项目路由；不能从公开发布副本恢复业务执行状态。
-
-## 许可证
-
-采用 [MIT License](LICENSE)。
+[Base 字段标准](.agents/skills/backlink-submitter/references/base-setup.md) · [维护与发布](docs/maintaining.md) · [MIT License](LICENSE)

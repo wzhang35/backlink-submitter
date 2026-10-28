@@ -37,9 +37,12 @@ lark-cli base +table-create --base-token '<base-token>' --name Backlinks \
   --fields @tmp/base-fields.json --as user --profile '<profile>' --dry-run
 ```
 
+这里的 `example schema` 只生成标准字段，不访问远端。建表前，将生成文件中 Submitter 的 `example-owner` 选项替换为该项目已确认的经办人；不要将示例路由用于云端操作。拿到新表的实际 ID 后，再建立真实项目配置。
+
 创建表是独立的远端写入，须获用户授权；确认后使用同一参数去掉 `--dry-run`。记录返回的 tableId/viewId，将其和在线 Kit 的 Base 入口、本机配置逐一核对，再运行：
 
 ```sh
+# 以下 example 均须换成已建立真实配置的 project-id。
 node scripts/backlinks.mjs example check-schema
 node scripts/backlinks.mjs example init --input-json - <<'JSON'
 {"yes":true}
@@ -54,6 +57,8 @@ node scripts/backlinks.mjs example bootstrap
 先运行 `check-schema`；它不要求 runtime，也不写 Base。逐项审阅差异后再制定迁移方案，不能用新表默认状态覆盖旧提交、回执或已验证结果。
 
 已有记录的表不允许 `init`。迁移旧执行器或换机器时，恢复匹配当前项目／官网／Base 的原始执行 ledger 和共享 circuit；不得以新建空状态解释“以前没提交过”。状态缺失、损坏、点击结果未知及待确认写入都需要人工审阅恢复。`bootstrap` 只核对字段和持久状态，不修复或重建它们。
+
+首次使用本工具但已有非空 Base 时，当前没有自动接管命令；先做只读检查并审阅迁移方案。新建空表应在导入候选之前完成 `init`，不能通过清空历史记录来满足初始化条件。
 
 ## 报告与公开仓库
 

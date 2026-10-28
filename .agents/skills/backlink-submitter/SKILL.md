@@ -1,11 +1,13 @@
 ---
 name: backlink-submitter
-description: Qualify, submit and publicly audit backlink candidates for a selected product using its Submission Kit and Base records. Use in this backlinks project for authorized candidate processing or audits.
+description: Set up a product project, qualify and submit backlink candidates, and audit public links using its Submission Kit and Base records. Use from this repository for project setup or authorized candidate processing and audits.
 ---
 
 # 通用外链流程
 
-仅用于用户已授权的提交或审计。只读 review 不提交，也不写 Base。
+用于项目接入，以及用户已授权的提交或审计。只读 review 不提交，也不写 Base。
+
+首次接入或检查项目准备情况时读 [Agent 接入指南](../../../docs/agent-setup.md)；该指南补充环境和资料准备，不替代以下业务规则或用户授权。
 
 ## 维护边界
 
