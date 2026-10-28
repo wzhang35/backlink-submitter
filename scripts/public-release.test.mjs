@@ -4,7 +4,7 @@ import {mkdtempSync,mkdirSync,writeFileSync,copyFileSync,readFileSync,rmSync,exi
 import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {privatePath,contentFindings} from './public-release.mjs';
+import {privatePath,contentFindings,PUBLIC_REPOSITORY_URL} from './public-release.mjs';
 
 test('publication checks distinguish private resources from fictional examples',()=>{
  assert.equal(privatePath('projects/private/kit.json'),true);
@@ -20,6 +20,51 @@ test('publication checks distinguish private resources from fictional examples',
  assert.ok(contentFindings(JSON.stringify({artifact_sensitivity:'private'})).length);
 });
 
+test('only the exact standalone public repository URL is exempt from identity matching',()=>{
+ const owner = new URL(PUBLIC_REPOSITORY_URL).pathname.split('/')[1];
+ const identity = owner.slice(0,6);
+ const flagged = value => contentFindings(value,[identity]).includes('local project identity');
+ assert.equal(flagged(PUBLIC_REPOSITORY_URL),false);
+ assert.equal(flagged(`仓库：\n${PUBLIC_REPOSITORY_URL}\n`),false);
+ assert.equal(flagged(`[repo](${PUBLIC_REPOSITORY_URL})`),false);
+ assert.equal(flagged('`'+PUBLIC_REPOSITORY_URL+'`'),false);
+ assert.equal(flagged(`仓库：（${PUBLIC_REPOSITORY_URL}），请查看`),false);
+ assert.equal(flagged(`仓库：${PUBLIC_REPOSITORY_URL}。`),false);
+ assert.equal(flagged(`See ${PUBLIC_REPOSITORY_URL}.`),false);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL}, next`),false);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL}; next`),false);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL} ${PUBLIC_REPOSITORY_URL}`),false);
+ assert.equal(flagged(`[repo](${PUBLIC_REPOSITORY_URL}) [source](${PUBLIC_REPOSITORY_URL})`),false);
+ assert.equal(flagged(`// See ${PUBLIC_REPOSITORY_URL}`),false);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL}/private (${PUBLIC_REPOSITORY_URL})`),true);
+ assert.equal(flagged(`https://other.example (${PUBLIC_REPOSITORY_URL}) ${PUBLIC_REPOSITORY_URL}`),true);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL} ${identity}`),true);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL}/pull/123`),true);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL}?private=1`),true);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL}#private`),true);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL}.private`),true);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL}-private`),true);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL},other-project`),true);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL};private/path`),true);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL}，后缀`),true);
+ assert.equal(flagged(`${PUBLIC_REPOSITORY_URL})/private`),true);
+ assert.equal(flagged(`(${PUBLIC_REPOSITORY_URL})/private`),true);
+ assert.equal(flagged(`x${PUBLIC_REPOSITORY_URL}`),true);
+ assert.equal(flagged(`https://other.example/redirect：${PUBLIC_REPOSITORY_URL}`),true);
+ assert.equal(flagged(`https://other.example/路径：${PUBLIC_REPOSITORY_URL}`),true);
+ assert.equal(flagged(`https://other.example/path(${PUBLIC_REPOSITORY_URL})`),true);
+ assert.equal(flagged(`data:,(${PUBLIC_REPOSITORY_URL})`),true);
+ assert.equal(flagged(`urn:example:(${PUBLIC_REPOSITORY_URL})`),true);
+ assert.equal(flagged(`data:text/plain, (${PUBLIC_REPOSITORY_URL})`),true);
+ assert.equal(flagged(`https://other.example/redirect?next=\t(${PUBLIC_REPOSITORY_URL})`),true);
+ assert.equal(flagged(`//other.example/redirect?next= (${PUBLIC_REPOSITORY_URL})`),true);
+ assert.equal(flagged(`//other.example/redirect?next=\t(${PUBLIC_REPOSITORY_URL})`),true);
+ assert.equal(flagged(`\\\\other.example\\redirect?next= (${PUBLIC_REPOSITORY_URL})`),true);
+ assert.equal(flagged(JSON.stringify({url:`data:text/plain, ${PUBLIC_REPOSITORY_URL} `})),true);
+ assert.equal(flagged(`https://other.example/${identity}`),true);
+ assert.ok(contentFindings(`${PUBLIC_REPOSITORY_URL}/pull/123`,[identity]).includes('nonfictional PR or issue reference'));
+});
+
 test('export drops old history and ignored files, never overwrites a release, and detects historical leaks',()=>{
  mkdirSync(new URL('../tmp/',import.meta.url),{recursive:true});
  const root=mkdtempSync(fileURLToPath(new URL('../tmp/publication-test-',import.meta.url)));
@@ -31,19 +76,33 @@ test('export drops old history and ignored files, never overwrites a release, an
   writeFileSync(join(root,'projects/example/kit.json'),'{}');
   writeFileSync(join(root,'.gitignore'),'tmp/\nprojects/*\n!projects/example/\n');
   git('init','--initial-branch=main');
+  mkdirSync(join(root,'projects/private'));
+  const identity = new URL(PUBLIC_REPOSITORY_URL).pathname.split('/')[1].slice(0,6);
+  writeFileSync(join(root,'projects/private/kit.json'),JSON.stringify({defaultSubmitter:identity}));
+  writeFileSync(join(root,'README.md'),`Repository:\n${PUBLIC_REPOSITORY_URL}\n`);
   writeFileSync(join(root,'old.md'),'https://workspace.'+'feishu.cn/wiki/'+'private-resource');
   git('add','.');git('-c','user.name=Example','-c','user.email=example@invalid','commit','-m','Old version');
   git('rm','old.md');git('-c','user.name=Example','-c','user.email=example@invalid','commit','-m','Remove old version');
   writeFileSync(join(root,'tmp/private.json'),'private runtime');
   const check=run('check');assert.equal(check.status,1);assert.match(check.stdout,/history:/);assert.ok(!check.stdout.includes('private-resource'));
+  assert.ok(!JSON.parse(check.stdout).findings.some(f=>f.reason==='local project identity'));
   git('-c','user.name=Example','-c','user.email=example@invalid','tag','-a','sample-tag','-m','https://workspace.'+'feishu.cn/wiki/'+'tag-resource');
   git('-c','user.name=Example','-c','user.email=example@invalid','tag','-a','outer-tag','sample-tag','-m','Nested tag');git('tag','-d','sample-tag');
   const tagCheck=JSON.parse(run('check').stdout);assert.ok(tagCheck.findings.some(f=>f.location.startsWith('tag:')));
   writeFileSync(join(root,'staged.md'),'https://workspace.'+'feishu.cn/wiki/'+'staged-resource');git('add','staged.md');
   writeFileSync(join(root,'staged.md'),'clean working copy');
   const stagedCheck=run('check');assert.equal(stagedCheck.status,1);assert.ok(JSON.parse(stagedCheck.stdout).findings.some(f=>f.location==='index:staged.md'));
+  writeFileSync(join(root,'identity-test.md'),identity);git('add','identity-test.md');
+  writeFileSync(join(root,'identity-test.md'),'clean working copy');
+  const identityCheck=JSON.parse(run('check').stdout);
+  assert.ok(identityCheck.findings.some(f=>f.location==='index:identity-test.md' && f.reason==='local project identity'));
   assert.equal(run('export','tmp/blocked').status,1);assert.equal(existsSync(join(root,'tmp/blocked')),false);
-  git('reset','--','staged.md');
+  git('reset','--','identity-test.md','staged.md');
+  writeFileSync(join(root,'history-identity.md'),identity);git('add','history-identity.md');
+  git('-c','user.name=Example','-c','user.email=example@invalid','commit','-m','Historical identity');
+  git('rm','history-identity.md');git('-c','user.name=Example','-c','user.email=example@invalid','commit','-m','Remove historical identity');
+  const historyIdentity=JSON.parse(run('check').stdout);
+  assert.ok(historyIdentity.findings.some(f=>f.location.startsWith('history:') && f.location.endsWith(':history-identity.md') && f.reason==='local project identity'));
   mkdirSync(join(root,'outside'));symlinkSync(join(root,'outside'),join(root,'tmp/linked-parent'));
   assert.equal(run('export','tmp/linked-parent/release').status,1);assert.equal(existsSync(join(root,'outside/release')),false);
   mkdirSync(join(root,'tmp/git-template'));
