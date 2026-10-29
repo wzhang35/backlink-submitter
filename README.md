@@ -1,6 +1,4 @@
-# Backlink Submitter
-
-**把外链提交的重复工作交给 AI。**
+# Backlink Submitter - 把外链提交的重复工作交给 AI
 
 提供产品资料和候选网站，AI 帮你筛选免费渠道、逐站填表提交，再确认链接是否生效。
 
